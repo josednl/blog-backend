@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
-import userRoutes from './modules/User/user.routes';
+import userRouter from './modules/User/user.routes';
 
 dotenv.config();
 
@@ -14,9 +14,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/public', express.static(path.join(__dirname, '/public')));
 
 //Routes
-app.use('/users', userRoutes);
+app.use('/users', userRouter);
 
-//Start server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+export default app;

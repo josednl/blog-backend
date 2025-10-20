@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=production node dist/app.js",
-    "dev": "NODE_ENV=development ts-node-dev --respawn --transpile-only src/app.ts",
+    "start": "NODE_ENV=production node dist/server.js",
+    "dev": "NODE_ENV=development ts-node-dev --respawn --transpile-only src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prisma:format": "prisma format",
     "prisma:generate": "prisma generate",
