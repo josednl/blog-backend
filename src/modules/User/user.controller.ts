@@ -43,7 +43,7 @@ export const updateUser = async (req: Request, res: Response) => {
 
   try {
     const updatedUser = await service.updateUser(id, updateData);
-    res.json(updateData);
+    res.json(updatedUser);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }

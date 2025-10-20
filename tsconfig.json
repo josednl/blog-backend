@@ -8,8 +8,8 @@
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "commonjs",
-    "target": "esnext",
-    "types": ["node"],
+    "target": "es2020",
+    "types": ["node", "jest"],
     // For nodejs:
     // "lib": ["esnext"],
     // and npm install -D @types/node
