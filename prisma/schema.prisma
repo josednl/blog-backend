@@ -17,6 +17,7 @@ model User {
   bio           String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  deletedAt DateTime?
 
   posts      Post[]    @relation("UserPosts")
   comments   Comment[]
@@ -40,6 +41,7 @@ model Post {
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   author   User        @relation("UserPosts", fields: [authorId], references: [id])
   comments Comment[]
@@ -52,6 +54,7 @@ model PostImage {
   order     Int?
   postId    String
   createdAt DateTime @default(now())
+  deletedAt DateTime?
 
   post Post @relation(fields: [postId], references: [id])
 }
@@ -65,7 +68,6 @@ model Comment {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-  isDeleted Boolean
 
   post    Post      @relation(fields: [postId], references: [id])
   user    User      @relation(fields: [userId], references: [id])

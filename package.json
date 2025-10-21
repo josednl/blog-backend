@@ -6,12 +6,15 @@
   "scripts": {
     "start": "NODE_ENV=production node dist/server.js",
     "dev": "NODE_ENV=development ts-node-dev --respawn --transpile-only src/server.ts",
-    "test": "jest",
+    "test": "NODE_ENV=test jest",
+    "test:prepare": "NODE_ENV=test node scripts/run-prisma.js migrate deploy",
+
     "prisma:format": "prisma format",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy",
-    "prisma:studio": "prisma studio"
+
+    "prisma:migrate": "NODE_ENV=development node scripts/run-prisma.js migrate dev",
+    "prisma:migrate:deploy": "NODE_ENV=development node scripts/run-prisma.js migrate deploy",
+    "prisma:studio": "NODE_ENV=development node scripts/run-prisma.js studio"
   },
   "keywords": [],
   "author": "",
