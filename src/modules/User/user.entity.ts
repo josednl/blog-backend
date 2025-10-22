@@ -1,3 +1,5 @@
+import { AppError } from '../../utils/AppError';
+
 export class User {
   constructor(
     public readonly id: string,
@@ -19,7 +21,7 @@ export class User {
 
   changeBio(newBio: string) {
     if (newBio.length > 250) {
-      throw new Error('Bio too long');
+      throw new AppError('Bio too long', 400);
     }
     this.bio = newBio;
   }

@@ -1,20 +1,20 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { UserService } from './user.service';
 import { PrismaUserRepository } from './user.repository.prisma';
 
 const repo = new PrismaUserRepository();
 const service = new UserService(repo);
 
-export const getAllUsers = async (req: Request, res: Response) => {
+export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await service.getAllUsers();
     res.json(users);
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 }
 
-export const getUserById = async (req: Request, res: Response) => {
+export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
   if (!id) {
     return res.status(400).json({ error: 'Missing user ID' });
@@ -25,16 +25,16 @@ export const getUserById = async (req: Request, res: Response) => {
   res.json(user);
 }
 
-export const createUser = async (req: Request, res: Response) => {
+export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     await service.create(req.body);
     res.status(201).json({ message: 'User created' });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    next(err);
   }
 }
 
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
   const updateData = req.body;
   if (!id) {
@@ -45,11 +45,11 @@ export const updateUser = async (req: Request, res: Response) => {
     const updatedUser = await service.updateUser(id, updateData);
     res.json(updatedUser);
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    next(err);
   }
 }
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
   if (!id) {
     return res.status(400).json({ error: 'Missing user ID' });
@@ -59,6 +59,6 @@ export const deleteUser = async (req: Request, res: Response) => {
     await service.deleteUser(id);
     res.status(204).send();
   } catch (err: any) {
-    res.status(400).json({ error: err.message })
+    next(err);
   }
 }

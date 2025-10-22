@@ -1,5 +1,6 @@
 import { UserRepository } from './user.repository';
 import { User } from './user.entity';
+import { AppError } from '../../utils/AppError';
 import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcrypt';
 
@@ -13,7 +14,7 @@ export class UserService {
     password: string;
   }): Promise<void> {
     const exists = await this.repo.findByUsername(data.username);
-    if (exists) throw new Error('Username already taken');
+    if (exists) throw new AppError('Username already taken', 404);
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const user = new User(
@@ -32,20 +33,26 @@ export class UserService {
   }
 
   async getUserById(id: string): Promise<User | null> {
-    return this.repo.findById(id);
+    const user = await this.repo.findById(id);
+    if (!user) throw new AppError('User not found', 404);
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | null> {
-    return this.repo.findByUsername(username);
+    const user = await this.repo.findByUsername(username);
+    if (!user) return null;
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    return this.repo.findByEmail(email);
+    const user = await this.repo.findByEmail(email);
+    if (!user) throw new AppError('User not found', 404);
+    return user;
   }
 
   async updateUser(id: string, updateData: Partial<Omit<User, 'id'>>): Promise<User> {
     const user = await this.repo.findById(id);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new AppError('User not found', 404);
 
     Object.assign(user, updateData);
 
@@ -55,7 +62,7 @@ export class UserService {
 
   async deleteUser(id: string): Promise<void> {
     const user = await this.repo.findById(id);
-    if (!user) throw new Error('User not found');
+    if (!user) throw new AppError('User not found', 404);
 
     await this.repo.softDelete(id);
   }
