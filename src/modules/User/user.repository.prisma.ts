@@ -34,13 +34,18 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async findAll(): Promise<User[]> {
-    const results = await prisma.user.findMany();
+    const results = await prisma.user.findMany({
+      where: { deletedAt: null }
+    });
     return results.map(this.mapToEntity);
   }
 
   private async findBy(field: 'id' | 'username' | 'email', value: string): Promise<User | null> {
-    const result = await prisma.user.findUnique({
-      where: { [field]: value } as any
+    const result = await prisma.user.findFirst({
+      where: { 
+        [field]: value,
+        deletedAt: null
+      }
     });
 
     return result ? this.mapToEntity(result) : null;
@@ -73,7 +78,21 @@ export class PrismaUserRepository implements UserRepository {
     })
   }
 
-  async delete(id: string): Promise<void> {
+  async softDelete(id: string): Promise<void> {
+    await prisma.user.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    });
+  }
+
+  async hardDelete(id: string): Promise<void> {
     await prisma.user.delete({ where: { id } });
+  }
+
+  async restore(id: string): Promise<void> {
+    await prisma.user.update({
+      where: { id },
+      data: { deletedAt: null }
+    });
   }
 }

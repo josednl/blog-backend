@@ -9,7 +9,8 @@ export class User {
     public bio?: string,
     public userTypeId?: string,
     public createdAt?: Date,
-    public updatedAt?: Date
+    public updatedAt?: Date,
+    public deletedAt?: Date
   ) { }
 
   hasProfilePic(): boolean {

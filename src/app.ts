@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
 import userRouter from './modules/User/user.routes';
+import authRouter from './modules/Auth/auth.routes';
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/public', express.static(path.join(__dirname, '/public')));
 
 //Routes
+app.use('/auth', authRouter);
 app.use('/users', userRouter);
 
 export default app;

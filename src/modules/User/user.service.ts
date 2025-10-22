@@ -1,6 +1,7 @@
 import { UserRepository } from './user.repository';
 import { User } from './user.entity';
 import { v4 as uuid } from 'uuid';
+import bcrypt from 'bcrypt';
 
 export class UserService {
   constructor(private readonly repo: UserRepository) { }
@@ -13,13 +14,14 @@ export class UserService {
   }): Promise<void> {
     const exists = await this.repo.findByUsername(data.username);
     if (exists) throw new Error('Username already taken');
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const user = new User(
       uuid(),
       data.name,
       data.username,
       data.email,
-      data.password
+      hashedPassword
     );
 
     await this.repo.create(user);
@@ -55,6 +57,6 @@ export class UserService {
     const user = await this.repo.findById(id);
     if (!user) throw new Error('User not found');
 
-    await this.repo.delete(id);
+    await this.repo.softDelete(id);
   }
 }
