@@ -24,12 +24,8 @@ function getSafeUser(user: any) {
 }
 
 const cookieExtractor = (req: Request) => {
-  let token = null;
-  if (req && req.cookies) {
-    token = req.cookies['jwt'];
-  }
-
-  return token;
+  if (req && req.cookies) req.cookies['accessToken'];
+  return null;
 }
 
 passport.use(
