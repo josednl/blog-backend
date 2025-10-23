@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import passport from 'passport';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { PrismaUserRepository } from '../modules/User/user.repository.prisma';
@@ -22,10 +23,19 @@ function getSafeUser(user: any) {
   };
 }
 
+const cookieExtractor = (req: Request) => {
+  let token = null;
+  if (req && req.cookies) {
+    token = req.cookies['jwt'];
+  }
+
+  return token;
+}
+
 passport.use(
   new JwtStrategy(
     {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: cookieExtractor,
       secretOrKey: JWT_SECRET
     },
     async (payload, done) => {
