@@ -1,14 +1,12 @@
 import { Router, Request, Response } from 'express';
-import passport from 'passport';
+import passport from '../../config/passport-config';
 import { login} from './auth.controller';
-import { authenticateJWT } from '../../middlewares/auth.middleware';
 
 const router = Router();
 
 router.post('/login', login);
-// router.get('/me', passport.authenticate('jwt', { session: false }), async (req: Request, res: Response) => {
-//   const user = (req as any).user;
-//   res.json({ message: `Hello, ${user.email}` });
+// router.get('/me', passport.authenticate('jwt', { session: false }), (req: Request, res: Response) => {
+//   res.json({ message: `Hello, ${req.user?.email}!`, user: req.user });
 // });
 
 export default router;

@@ -1,16 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { JwtPayload } from '../../types/jwt-payload';
 import { PrismaUserRepository } from '../User/user.repository.prisma';
 import { UserService } from '../User/user.service';
-
-const repo = new PrismaUserRepository();
-const service = new UserService(repo);
 
 if (!process.env.JWT_SECRET) {
   throw new Error('The JWT_SECRET environment variable is missing.');
 }
 const JWT_SECRET = process.env.JWT_SECRET;
+
+const repo = new PrismaUserRepository();
+const service = new UserService(repo);
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -24,8 +25,13 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) return res.status(401).json({ error: 'Invalid credentials' });
 
+    const payload: JwtPayload = {
+      id: user.id,
+      email: user.email
+    };
+
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      payload,
       JWT_SECRET,
       { expiresIn: '1h' }
     );

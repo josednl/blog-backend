@@ -41,6 +41,7 @@
     "moduleDetection": "force",
     "moduleResolution": "node",
     "skipLibCheck": true,
+    "typeRoots": ["src/types", "node_modules/@types"]
   },
   "include": ["src"],
   "exclude": ["node_nodules", "dist"]

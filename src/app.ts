@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
 import passport from 'passport';
-import './config/passport-config'
+import './config/passport-config';
 import { errorHandler } from './middlewares/error-handler';
 import userRouter from './modules/User/user.routes';
 import authRouter from './modules/Auth/auth.routes';

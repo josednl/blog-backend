@@ -9,9 +9,18 @@ if (!process.env.JWT_SECRET) {
   throw new Error('The JWT_SECRET environment variable is missing.');
 }
 const JWT_SECRET = process.env.JWT_SECRET;
-
 const repo = new PrismaUserRepository();
 const service = new UserService(repo);
+
+function getSafeUser(user: any) {
+  return {
+    id: user.id,
+    name: user.name,
+    username: user.username,
+    email: user.email,
+    profilePicUrl: user.profilePicUrl
+  };
+}
 
 passport.use(
   new JwtStrategy(
@@ -19,15 +28,16 @@ passport.use(
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: JWT_SECRET
     },
-      async (payload, done) => {
-        try {
-          const user = await service.getUserById(payload.id);
-          if (!user) return done(null, false);
-          return done(null, user);
-        } catch (error) {
-          return done(error, false);
-        }
+    async (payload, done) => {
+      try {
+        const user = await service.getUserById(payload.id);
+        if (!user) return done(null, false);
+        const safeUser = JSON.parse(JSON.stringify(getSafeUser(user)));
+        return done(null, safeUser);
+      } catch (error) {
+        return done(error, false);
       }
+    }
   )
 );
 
