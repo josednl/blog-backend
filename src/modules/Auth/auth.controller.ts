@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../../types/jwt-payload';
 import { PrismaUserRepository } from '../User/user.repository.prisma';
 import { UserService } from '../User/user.service';
-import { error } from 'console';
 
 if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
   throw new Error('The JWT_SECRET or JWT_REFRESH_SECRET environment variable is missing.');
@@ -32,7 +31,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     const payload: JwtPayload = {
       id: user.id,
-      email: user.email
+      email: user.email,
+      sessionStart: Date.now(),
     };
 
     const accesssToken = jwt.sign(
@@ -49,7 +49,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     res.cookie('accessToken', accesssToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV  === 'production',
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000
     });
@@ -74,42 +74,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     console.error('Login error:', error);
     next();
   }
-
 };
-
-export const refresh = async (req: Request, res: Response) => {
-  try {
-    const refreshToken = req.cookies['refreshToken'];
-    if (!refreshToken) return res.status(401).json({ error: 'Missing refresh token' });
-
-    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as any;
-    const user = await service.getUserById(decoded.id);
-    if (!user) return res.status(401).json({ error: 'User not found' });
-
-    const payload: JwtPayload = {
-      id: user.id,
-      email: user.email
-    };
-
-    const newAccessToken = jwt.sign(
-      payload,
-      JWT_SECRET,
-      { expiresIn: ACCESS_TOKEN_EXPIRATION }
-    );
-
-    res.cookie('accessToken', newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000
-    });
-
-    res.json({ message: 'Access token refreshed successfully' });
-  } catch (err) {
-    console.error('Refresh error:', err);
-    res.status(403).json({ error: 'Invalid or expired refresh token' });;
-  }
-}
 
 export const logout = (req: Request, res: Response) => {
   res.clearCookie('accessToken');
