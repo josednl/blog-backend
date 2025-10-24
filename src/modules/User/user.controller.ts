@@ -1,9 +1,45 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserService } from './user.service';
 import { PrismaUserRepository } from './user.repository.prisma';
+import { body } from 'express-validator';
 
 const repo = new PrismaUserRepository();
 const service = new UserService(repo);
+
+export const userValidationRules = [
+  body('name')
+    .trim()
+    .notEmpty().withMessage('Name is required')
+    .isString().withMessage('Name must be a string')
+    .isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
+
+  body('username')
+    .trim()
+    .notEmpty().withMessage('Username is required')
+    .isAlphanumeric().withMessage('Username must be alphanumeric')
+    .isLength({ min: 2, max: 30 }).withMessage('Username must be between 2 and 30 characters'),
+
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Invalid email'),
+
+  body('password')
+    .notEmpty().withMessage('Password is required')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    .matches(/\d/).withMessage('Password must contain a number')
+    .matches(/[A-Z]/).withMessage('Password must contain an uppercase letter')
+    .matches(/[a-z]/).withMessage('Password must contain a lowercase letter'),
+
+  body('confirmPassword')
+    .notEmpty().withMessage('Confirm password is required')
+    .custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error('Passwords do not match');
+      }
+      return true;
+    })
+];
 
 export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {

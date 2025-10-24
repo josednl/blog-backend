@@ -13,8 +13,12 @@ export class UserService {
     email: string;
     password: string;
   }): Promise<void> {
-    const exists = await this.repo.findByUsername(data.username);
-    if (exists) throw new AppError('Username already taken', 404);
+    const usernameExists = await this.repo.findByUsername(data.username);
+    if (usernameExists) throw new AppError('Username already taken', 400);
+
+    const emailExists = await this.repo.findByEmail(data.email);
+    if (emailExists) throw new AppError('Email already in use', 400);
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const user = new User(
