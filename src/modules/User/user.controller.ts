@@ -93,7 +93,7 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 
   try {
     await service.deleteUser(id);
-    res.status(204).send();
+    res.status(204).json({  message: 'User deleted' });
   } catch (err: any) {
     next(err);
   }

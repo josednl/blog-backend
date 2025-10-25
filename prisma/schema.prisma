@@ -8,39 +8,47 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   name          String
-  username      String   @unique
-  email         String   @unique
+  username      String    @unique
+  email         String    @unique
   password      String
   profilePicUrl String?
   bio           String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  deletedAt DateTime?
+  roleId        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
-  posts      Post[]    @relation("UserPosts")
-  comments   Comment[]
-  userTypeId String?
-  userType   UserType? @relation(fields: [userTypeId], references: [id])
+  posts    Post[]    @relation("UserPosts")
+  comments Comment[]
+  role     Role?     @relation(fields: [roleId], references: [id])
 }
 
-model UserType {
+model Role {
   id          String  @id @default(uuid())
-  type        String  @unique
+  name        String  @unique
   description String?
 
-  users User[]
+  users       User[]
+  permissions Permission[] @relation("RolePermissions")
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  roles       Role[]  @relation("RolePermissions")
 }
 
 model Post {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   title     String
-  content   String   @db.Text
-  published Boolean  @default(false)
+  content   String    @db.Text
+  published Boolean   @default(false)
   authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   author   User        @relation("UserPosts", fields: [authorId], references: [id])
@@ -49,11 +57,11 @@ model Post {
 }
 
 model PostImage {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   url       String
   order     Int?
   postId    String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   deletedAt DateTime?
 
   post Post @relation(fields: [postId], references: [id])

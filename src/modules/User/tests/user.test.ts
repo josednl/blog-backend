@@ -17,7 +17,8 @@ beforeEach(async () => {
   await prisma.postImage.deleteMany();
   await prisma.post.deleteMany();
   await prisma.user.deleteMany();
-  await prisma.userType.deleteMany();
+  await prisma.role.deleteMany();
+  await prisma.permission.deleteMany();
 });
 
 describe('User API', () => {

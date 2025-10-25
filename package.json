@@ -8,6 +8,7 @@
     "dev": "NODE_ENV=development ts-node-dev --respawn --transpile-only src/server.ts",
     "test": "NODE_ENV=test jest",
     "test:prepare": "NODE_ENV=test node scripts/run-prisma.js migrate deploy",
+    "seed": "NODE_ENV=development ts-node-dev --transpile-only src/db/seed.ts",
     "prisma:format": "prisma format",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "NODE_ENV=development node scripts/run-prisma.js migrate dev",

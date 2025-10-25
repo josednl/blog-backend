@@ -9,7 +9,7 @@ export class User {
     public password: string,
     public profilePicUrl?: string,
     public bio?: string,
-    public userTypeId?: string,
+    public roleId?: string,
     public createdAt?: Date,
     public updatedAt?: Date,
     public deletedAt?: Date

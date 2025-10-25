@@ -12,7 +12,7 @@ export class PrismaUserRepository implements UserRepository {
       data.password,
       data.profilePicUrl,
       data.bio,
-      data.userTypeId,
+      data.roleId,
       data.createdAt,
       data.updatedAt
     );
@@ -28,7 +28,7 @@ export class PrismaUserRepository implements UserRepository {
         password: user.password,
         ...(user.profilePicUrl !== undefined && { profilePicUrl: user.profilePicUrl }),
         ...(user.bio !== undefined && { bio: user.bio }),
-        ...(user.userTypeId !== undefined && { userTypeId: user.userTypeId })
+        ...(user.roleId !== undefined && { roleId: user.roleId })
       }
     });
   }
@@ -73,7 +73,7 @@ export class PrismaUserRepository implements UserRepository {
         password: user.password,
         ...(user.profilePicUrl !== undefined && { profilePicUrl: user.profilePicUrl }),
         ...(user.bio !== undefined && { bio: user.bio }),
-        ...(user.userTypeId !== undefined && { userTypeId: user.userTypeId })
+        ...(user.roleId !== undefined && { roleId: user.roleId })
       }
     })
   }

@@ -33,6 +33,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       id: user.id,
       email: user.email,
       sessionStart: Date.now(),
+      roleId: user.roleId
     };
 
     const accesssToken = jwt.sign(
@@ -67,7 +68,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         name: user.name,
         username: user.username,
         email: user.email,
-        profilePicUrl: user.profilePicUrl
+        profilePicUrl: user.profilePicUrl,
+        roleId: user.roleId
       }
     });
   } catch (error) {

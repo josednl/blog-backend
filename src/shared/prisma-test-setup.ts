@@ -17,7 +17,7 @@ beforeEach(async () => {
     prisma.postImage.deleteMany(),
     prisma.post.deleteMany(),
     prisma.user.deleteMany(),
-    prisma.userType.deleteMany()
+    prisma.role.deleteMany()
   ]);
 });
 

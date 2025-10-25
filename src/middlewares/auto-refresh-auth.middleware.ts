@@ -36,7 +36,8 @@ export const autoRefreshAuth = async (req: Request, res: Response, next: NextFun
           name: user.name,
           username: user.username,
           email: user.email,
-          profilePicUrl: user.profilePicUrl
+          profilePicUrl: user.profilePicUrl,
+          roleId: user.roleId
         };
 
         return next();
@@ -75,7 +76,8 @@ export const autoRefreshAuth = async (req: Request, res: Response, next: NextFun
     const payload: JwtPayload = {
       id: user.id,
       email: user.email,
-      sessionStart: decodedRefresh.sessionStart
+      sessionStart: decodedRefresh.sessionStart,
+      roleId: user.roleId
     };
 
     const newAccessToken = jwt.sign(
@@ -109,7 +111,8 @@ export const autoRefreshAuth = async (req: Request, res: Response, next: NextFun
       name: user.name,
       username: user.username,
       email: user.email,
-      profilePicUrl: user.profilePicUrl
+      profilePicUrl: user.profilePicUrl,
+      roleId: user.roleId
     };
 
     next();
