@@ -6,7 +6,7 @@ import { body } from 'express-validator';
 const repo = new PrismaUserRepository();
 const service = new UserService(repo);
 
-export const userValidationRules = [
+export const createUserValidationRules = [
   body('name')
     .trim()
     .notEmpty().withMessage('Name is required')
@@ -16,7 +16,7 @@ export const userValidationRules = [
   body('username')
     .trim()
     .notEmpty().withMessage('Username is required')
-    .isAlphanumeric().withMessage('Username must be alphanumeric')
+    .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Username can only contain letters, numbers, underscores, or hyphens')
     .isLength({ min: 2, max: 30 }).withMessage('Username must be between 2 and 30 characters'),
 
   body('email')
@@ -35,6 +35,41 @@ export const userValidationRules = [
     .notEmpty().withMessage('Confirm password is required')
     .custom((value, { req }) => {
       if (value !== req.body.password) {
+        throw new Error('Passwords do not match');
+      }
+      return true;
+    })
+];
+
+export const updateUserValidationRules = [
+  body('name')
+    .optional()
+    .trim()
+    .isString().withMessage('Name must be a string')
+    .isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
+
+  body('username')
+    .optional()
+    .trim()
+    .matches(/^[a-zA-Z0-9_-]+$/).withMessage('Username can only contain letters, numbers, underscores, or hyphens')
+    .isLength({ min: 2, max: 30 }).withMessage('Username must be between 2 and 30 characters'),
+
+  body('email')
+    .optional()
+    .trim()
+    .isEmail().withMessage('Invalid email'),
+
+  body('password')
+    .optional()
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    .matches(/\d/).withMessage('Password must contain a number')
+    .matches(/[A-Z]/).withMessage('Password must contain an uppercase letter')
+    .matches(/[a-z]/).withMessage('Password must contain a lowercase letter'),
+
+  body('confirmPassword')
+    .optional()
+    .custom((value, { req }) => {
+      if (req.body.password && value !== req.body.password) {
         throw new Error('Passwords do not match');
       }
       return true;

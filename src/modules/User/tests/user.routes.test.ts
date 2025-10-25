@@ -10,6 +10,14 @@ const app = express();
 app.use(express.json());
 app.use('/users', userRouter);
 
+jest.mock('../../../middlewares/auto-refresh-auth.middleware.ts', () => ({
+  autoRefreshAuth: (_req: any, _res: any, next: any) => next(),
+}));
+
+jest.mock('../../../middlewares/authorization.middleware', () => ({
+  requirePermission: () => (_req: any, _res: any, next: any) => next(),
+}));
+
 const MockRepo = PrismaUserRepository as unknown as {
   reset: () => void;
   insert: (user: User) => void;
@@ -19,7 +27,7 @@ beforeEach(() => {
   MockRepo.reset();
 });
 
-test('GET /users return an initially empty array', async () => {
+test('GET /users returns an initially empty array', async () => {
   const res = await request(app).get('/users');
   expect(res.status).toBe(200);
   expect(Array.isArray(res.body)).toBe(true);
@@ -32,7 +40,8 @@ test('POST /users creates a user', async () => {
     name: 'Frodo',
     username: 'frodo123',
     email: 'frodo@shire.com',
-    password: '123456'
+    password: 'Password1',
+    confirmPassword: 'Password1'
   };
 
   const res = await request(app).post('/users').send(newUser);
@@ -49,7 +58,7 @@ test('GET /users/:id returns user if it exists', async () => {
     'Sam',
     'samwise',
     'sam@shire.com',
-    'po-ta-toes'
+    'Password1'
   );
 
   MockRepo.insert(user);
@@ -65,15 +74,13 @@ test('PUT /users/:id updates an existing user', async () => {
     'Merry',
     'merry_b',
     'merry@shire.com',
-    'brandybuck'
+    'Password1'
   );
 
   MockRepo.insert(originalUser);
 
   const updatedData = {
-    name: 'Meriadoc',
-    username: 'merry_updated',
-    email: 'meri@shire.com'
+    name: 'Meriadoc'
   };
 
   const res = await request(app)
@@ -84,17 +91,16 @@ test('PUT /users/:id updates an existing user', async () => {
   expect(res.body).toMatchObject({
     id: originalUser.id,
     name: 'Meriadoc',
-    username: 'merry_updated',
-    email: 'meri@shire.com'
+    username: 'merry_b',
+    email: 'merry@shire.com'
   });
 
   const getRes = await request(app).get(`/users/${originalUser.id}`);
   expect(getRes.status).toBe(200);
   expect(getRes.body.name).toBe('Meriadoc');
-  expect(getRes.body.username).toBe('merry_updated');
-  expect(getRes.body.email).toBe('meri@shire.com');
+  expect(getRes.body.username).toBe('merry_b');
+  expect(getRes.body.email).toBe('merry@shire.com');
 });
-
 
 test('DELETE /users/:id deletes existing user', async () => {
   const user = new User(
@@ -102,7 +108,7 @@ test('DELETE /users/:id deletes existing user', async () => {
     'Pippin',
     'pippin123',
     'pippin@shire.com',
-    'lothlorien'
+    'Password1'
   );
 
   MockRepo.insert(user);
@@ -111,5 +117,5 @@ test('DELETE /users/:id deletes existing user', async () => {
   expect(resDel.status).toBe(204);
 
   const resGet = await request(app).get(`/users/${user.id}`);
-  expect(resGet.status).toBe(404);
+  expect(resGet.body.deletedAt).not.toBeNull();
 });

@@ -30,7 +30,13 @@ export class PrismaUserRepository implements UserRepository {
     mockUsers[index] = user;
   }
 
-  async delete(id: string): Promise<void> {
+  async softDelete(id: string): Promise<void> {
+     const user = mockUsers.find(u => u.id === id && !u.deletedAt);
+    if (!user) throw new Error('User not found');
+    user.deletedAt = new Date();
+  }
+
+  async hardDelete(id: string): Promise<void> {
     const index = mockUsers.findIndex(u => u.id === id);
     if (index === -1) throw new Error('User not found');
     mockUsers.splice(index, 1);

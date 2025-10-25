@@ -2,6 +2,14 @@ import { PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import app from '../../../app';
 
+jest.mock('../../../middlewares/auto-refresh-auth.middleware', () => ({
+  autoRefreshAuth: (_req: any, _res: any, next: any) => next(),
+}));
+
+jest.mock('../../../middlewares/authorization.middleware', () => ({
+  requirePermission: () => (_req: any, _res: any, next: any) => next(),
+}));
+
 const prisma = new PrismaClient();
 
 beforeAll(async () => {
@@ -33,7 +41,8 @@ describe('User API', () => {
       name: 'Aragorn',
       username: 'strider',
       email: 'aragorn@gondor.com',
-      password: 'anduril123'
+      password: 'Anduril123',
+      confirmPassword: 'Anduril123'
     };
 
     const res = await request(app).post('/users').send(newUser);
@@ -54,7 +63,7 @@ describe('User API', () => {
         name: 'Legolas',
         username: 'legolas123',
         email: 'legolas@mirkwood.com',
-        password: 'bowandarrow'
+        password: 'BowAndArrow1'
       }
     });
 
@@ -70,14 +79,16 @@ describe('User API', () => {
         name: 'Gimli',
         username: 'gimli_son',
         email: 'gimli@erebor.com',
-        password: 'axeofdoom'
+        password: 'AxeOfDoom1'
       }
     });
 
     const updatedData = {
       name: 'Gimli the Dwarf',
       username: 'gimli_updated',
-      email: 'gimli@mountains.com'
+      email: 'gimli@mountains.com',
+      password: 'AxeOfDoom1',
+      confirmPassword: 'AxeOfDoom1'
     };
 
     const res = await request(app)
@@ -96,21 +107,22 @@ describe('User API', () => {
     expect(dbUser?.name).toBe('Gimli the Dwarf');
   });
 
-  test('DELETE /users/:id deletes a user', async () => {
+  test('DELETE /users/:id soft deletes a user', async () => {
     const user = await prisma.user.create({
       data: {
         name: 'Boromir',
         username: 'boromir123',
         email: 'boromir@gondor.com',
-        password: 'oneDoesNotSimply'
+        password: 'OneDoesNotSimply1'
       }
     });
 
     const res = await request(app).delete(`/users/${user.id}`);
     expect(res.status).toBe(204);
 
-    const deletedUser = await prisma.user.findUnique({ where: { id: user.id } });
-    expect(deletedUser).toBeNull();
+    const softDeletedUser = await prisma.user.findUnique({ where: { id: user.id } });
+    expect(softDeletedUser).not.toBeNull();
+    expect(softDeletedUser?.deletedAt).not.toBeNull();
   });
 
   test('GET /users/:id returns 404 if user does not exist', async () => {
@@ -119,7 +131,7 @@ describe('User API', () => {
     expect(res.body).toHaveProperty('error', 'User not found');
   });
 
-  test('PUT /users/:id returns 400 for invalid ID', async () => {
+  test('PUT /users/:id returns 404 for missing ID', async () => {
     const res = await request(app).put('/users/').send({
       name: 'Fake',
       email: 'fake@example.com'
@@ -127,7 +139,7 @@ describe('User API', () => {
     expect(res.status).toBe(404);
   });
 
-  test('DELETE /users/:id returns 400 for missing ID', async () => {
+  test('DELETE /users/:id returns 404 for missing ID', async () => {
     const res = await request(app).delete('/users/');
     expect(res.status).toBe(404);
   });
