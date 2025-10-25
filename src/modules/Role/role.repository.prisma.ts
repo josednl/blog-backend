@@ -52,7 +52,7 @@ export class PrismaRoleRepository implements RoleRepository {
     await prisma.role.update({
       where: { id: role.id },
       data: {
-        name: role.name,
+        ...(role.name !== undefined && { name: role.name }),
         ...(role.description !== undefined && { description: role.description }),
       }
     })

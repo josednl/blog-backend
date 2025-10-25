@@ -2,6 +2,8 @@ import { prisma } from '../../shared/prisma';
 import { UserRepository } from './user.repository';
 import { User } from './user.entity';
 
+let cachedDefaultRoleId: string | null = null;
+
 export class PrismaUserRepository implements UserRepository {
   private mapToEntity(data: any): User {
     return new User(
@@ -18,7 +20,16 @@ export class PrismaUserRepository implements UserRepository {
     );
   }
 
+
   async create(user: User): Promise<void> {
+    if (!cachedDefaultRoleId) {
+      const defaultRole = await prisma.role.findUnique({ where: { name: 'user' } });
+      if (!defaultRole) {
+        throw new Error('Default role "user" not found. Please run the seed first.');
+      }
+      cachedDefaultRoleId = defaultRole.id;
+    }
+
     await prisma.user.create({
       data: {
         id: user.id,
@@ -28,7 +39,7 @@ export class PrismaUserRepository implements UserRepository {
         password: user.password,
         ...(user.profilePicUrl !== undefined && { profilePicUrl: user.profilePicUrl }),
         ...(user.bio !== undefined && { bio: user.bio }),
-        ...(user.roleId !== undefined && { roleId: user.roleId })
+        roleId: user.roleId || cachedDefaultRoleId,
       }
     });
   }
@@ -42,7 +53,7 @@ export class PrismaUserRepository implements UserRepository {
 
   private async findBy(field: 'id' | 'username' | 'email', value: string): Promise<User | null> {
     const result = await prisma.user.findFirst({
-      where: { 
+      where: {
         [field]: value,
         deletedAt: null
       }
@@ -64,18 +75,22 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async update(user: User): Promise<void> {
+    await this.updatePartial(user.id, user);
+  }
+
+  async updatePartial(id: string, data: Partial<User>): Promise<void> {
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id },
       data: {
-        name: user.name,
-        username: user.username,
-        email: user.email,
-        password: user.password,
-        ...(user.profilePicUrl !== undefined && { profilePicUrl: user.profilePicUrl }),
-        ...(user.bio !== undefined && { bio: user.bio }),
-        ...(user.roleId !== undefined && { roleId: user.roleId })
+        ...(data.name && { name: data.name }),
+        ...(data.username && { username: data.username }),
+        ...(data.email && { email: data.email }),
+        ...(data.password && { password: data.password }),
+        ...(data.profilePicUrl && { profilePicUrl: data.profilePicUrl }),
+        ...(data.bio && { bio: data.bio }),
+        ...(data.roleId && { roleId: data.roleId })
       }
-    })
+    });
   }
 
   async softDelete(id: string): Promise<void> {

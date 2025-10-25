@@ -51,7 +51,7 @@ export class PrismaPermissionRepository implements PermissionRepository {
     await prisma.permission.update({
       where: { id: permission.id },
       data: {
-        name: permission.name,
+        ...(permission.name !== undefined && { name: permission.name }),
         ...(permission.description !== undefined && { description: permission.description }),
       }
     })

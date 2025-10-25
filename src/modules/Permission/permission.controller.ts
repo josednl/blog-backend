@@ -6,7 +6,7 @@ import { body } from 'express-validator';
 const repo = new PrismaPermissionRepository();
 const service = new PermissionService(repo);
 
-export const permissionValidationRules = [
+export const createPermissionValidationRules = [
   body('name')
     .trim()
     .notEmpty().withMessage('Name is required')
@@ -14,6 +14,20 @@ export const permissionValidationRules = [
     .isLength({ min: 2, max: 50 }).withMessage('Name must be between 2 and 50 characters'),
 
   body('description')
+    .trim()
+    .isLength({ max: 150 }).withMessage('Role desciprtion must be no longer than 150 characters'),
+
+];
+
+export const updatePermissionValidationRules = [
+  body('name')
+    .optional()
+    .trim()
+    .isString().withMessage('Name must be a string')
+    .isLength({ min: 2, max: 50 }).withMessage('Name must be between 2 and 50 characters'),
+
+  body('description')
+    .optional()
     .trim()
     .isLength({ max: 150 }).withMessage('Role desciprtion must be no longer than 150 characters'),
 

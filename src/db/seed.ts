@@ -1,9 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding roles and permissions...');
+  console.log('Starting database seed...');
 
   const permissions = [
     { name: 'CREATE_USER', description: 'Can create new users' },
@@ -76,7 +80,33 @@ async function main() {
     });
   }
 
-  console.log('Seeding completed successfully!');
+  console.log('Roles and permissions seeded');
+
+  const ADMIN_NAME = process.env.ADMIN_NAME || 'Admin User';
+  const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@example.com';
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin123!';
+  const SALT_ROUNDS = Number(process.env.SALT_ROUNDS || 10);
+
+  const adminRole = await prisma.role.findUnique({ where: { name: 'admin' } });
+  if (!adminRole) throw new Error('Admin role not found — seed roles first.');
+
+  const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, SALT_ROUNDS);
+
+  await prisma.user.upsert({
+    where: { email: ADMIN_EMAIL },
+    update: {},
+    create: {
+      name: ADMIN_NAME,
+      username: ADMIN_USERNAME,
+      email: ADMIN_EMAIL,
+      password: hashedPassword,
+      roleId: adminRole.id,
+    },
+  });
+
+  console.log(`Admin user created`);
+  console.log('Database seed completed successfully!');
 }
 
 main()
