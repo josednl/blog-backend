@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../../shared/prisma';
 import { JwtPayload } from '../../types/jwt-payload';
 import { PrismaUserRepository } from '../User/user.repository.prisma';
 import { UserService } from '../User/user.service';
@@ -29,11 +30,21 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) return res.status(401).json({ error: 'Invalid credentials' });
 
+    let roleName: string | null = null;
+    if (user.roleId) {
+      const role = await prisma.role.findUnique({
+        where: { id: user.roleId },
+        select: { name: true },
+      });
+      roleName = role?.name || null;
+    }
+
     const payload: JwtPayload = {
       id: user.id,
       email: user.email,
       sessionStart: Date.now(),
-      roleId: user.roleId
+      roleId: user.roleId,
+      roleName,
     };
 
     const accesssToken = jwt.sign(
@@ -69,7 +80,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         username: user.username,
         email: user.email,
         profilePicUrl: user.profilePicUrl,
-        roleId: user.roleId
+        roleId: user.roleId,
+        roleName
       }
     });
   } catch (error) {

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../shared/prisma';
 import { PrismaUserRepository } from '../modules/User/user.repository.prisma';
 import { UserService } from '../modules/User/user.service';
 import { JwtPayload } from '../types/jwt-payload';
@@ -21,36 +22,46 @@ export const autoRefreshAuth = async (req: Request, res: Response, next: NextFun
     const accessToken = req.cookies['accessToken'];
     const refreshToken = req.cookies['refreshToken'];
 
+    (req as any).user = undefined;
+
     if (!accessToken && !refreshToken) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      return next();
     }
 
     if (accessToken) {
       try {
         const decoded = jwt.verify(accessToken, JWT_SECRET) as JwtPayload;
         const user = await service.getUserById(decoded.id);
-        if (!user) throw new Error('User not found');
+        if (user) {
+          let roleName: string | null = null;
+          if (user.roleId) {
+            const role = await prisma.role.findUnique({
+              where: { id: user.roleId },
+              select: { name: true },
+            });
+            roleName = role?.name || null;
+          }
 
-        (req as any).user = {
-          id: user.id,
-          name: user.name,
-          username: user.username,
-          email: user.email,
-          profilePicUrl: user.profilePicUrl,
-          roleId: user.roleId
-        };
-
+          (req as any).user = {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            profilePicUrl: user.profilePicUrl,
+            roleId: user.roleId,
+            roleName,
+          };
+        }
         return next();
       } catch (err) {
         if ((err as any).name !== 'TokenExpiredError') {
-          return res.status(401).json({ error: 'Invalid access token' });
+          console.warn('Invalid access token, ignoring:', err);
+          return next();
         }
       }
     }
 
-    if (!refreshToken) {
-      return res.status(401).json({ error: 'Missing refresh token' });
-    }
+    if (!refreshToken) return next();
 
     let decodedRefresh: JwtPayload;
     try {
@@ -59,52 +70,55 @@ export const autoRefreshAuth = async (req: Request, res: Response, next: NextFun
       if (err.name === 'TokenExpiredError') {
         res.clearCookie('accessToken');
         res.clearCookie('refreshToken');
-        return res.status(401).json({ error: 'Session expired, please log in again' });
+        return next();
       }
-      return res.status(401).json({ error: 'Invalid refresh token' });
+      console.warn('Invalid refresh token, ignoring:', err);
+      return next();
     }
+
     const sessionDuration = Date.now() - decodedRefresh.sessionStart!;
-    const maxSessionDuration = 7 * 24 * 60 * 60 * 1000;
+    const maxSessionDuration = 7 * 24 * 60 * 60 * 1000; // 7 días
     if (sessionDuration > maxSessionDuration) {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
-      return res.status(401).json({ error: 'Session expired, please log in again' });
+      return next();
     }
 
     const user = await service.getUserById(decodedRefresh.id);
-    if (!user) return res.status(401).json({ error: 'User not found' });
+    if (!user) return next();
+
     const payload: JwtPayload = {
       id: user.id,
       email: user.email,
       sessionStart: decodedRefresh.sessionStart,
-      roleId: user.roleId
+      roleId: user.roleId,
     };
 
-    const newAccessToken = jwt.sign(
-      payload,
-      JWT_SECRET,
-      { expiresIn: ACCESS_TOKEN_EXPIRATION }
-    );
-
-    const newRefreshToken = jwt.sign(
-      payload,
-      JWT_REFRESH_SECRET,
-      { expiresIn: REFRESH_TOKEN_EXPIRATION }
-    );
+    const newAccessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRATION });
+    const newRefreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRATION });
 
     res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 15 * 60 * 1000
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+
+    let roleName: string | null = null;
+    if (user.roleId) {
+      const role = await prisma.role.findUnique({
+        where: { id: user.roleId },
+        select: { name: true },
+      });
+      roleName = role?.name || null;
+    }
 
     (req as any).user = {
       id: user.id,
@@ -112,12 +126,13 @@ export const autoRefreshAuth = async (req: Request, res: Response, next: NextFun
       username: user.username,
       email: user.email,
       profilePicUrl: user.profilePicUrl,
-      roleId: user.roleId
+      roleId: user.roleId,
+      roleName,
     };
 
     next();
   } catch (error) {
     console.error('Auto-refresh auth error:', error);
-    return res.status(401).json({ error: 'Authentication failed' });
+    next();
   }
 };

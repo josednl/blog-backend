@@ -1,0 +1,14 @@
+import { Post } from './post.entity';
+
+export interface PostRepository {
+  create(post: Post): Promise<void>;
+  findAll(): Promise<Post[]>;
+  findAllPublic(): Promise<Post[]>;
+  findAllOwn(id: string): Promise<Post[]>;
+  findById(id: string): Promise<Post | null>;
+  findByAuthorId(authorId: string): Promise<Post[] | null>;
+  findPublicByAuthorId(authorId: string): Promise<Post[] | null>;
+  update(post: Post): Promise<void>;
+  softDelete(id: string): Promise<void>;
+  hardDelete(id: string): Promise<void>;
+}

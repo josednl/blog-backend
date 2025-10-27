@@ -52,6 +52,7 @@ async function main() {
         getPerm('CREATE_POST'),
         getPerm('READ_POST'),
         getPerm('UPDATE_POST'),
+        getPerm('DELETE_POST'),
         getPerm('CREATE_COMMENT'),
         getPerm('DELETE_COMMENT'),
       ],

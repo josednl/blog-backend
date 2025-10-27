@@ -16,10 +16,10 @@ export class PrismaUserRepository implements UserRepository {
       data.bio,
       data.roleId,
       data.createdAt,
-      data.updatedAt
+      data.updatedAt,
+      data.deletedAt
     );
   }
-
 
   async create(user: User): Promise<void> {
     if (!cachedDefaultRoleId) {
