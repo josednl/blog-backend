@@ -79,7 +79,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         name: user.name,
         username: user.username,
         email: user.email,
-        profilePicUrl: user.profilePicUrl,
+        profilePicId: user.profilePicId,
         roleId: user.roleId,
         roleName
       }

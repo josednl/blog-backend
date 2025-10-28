@@ -19,7 +19,7 @@ function getSafeUser(user: any) {
     name: user.name,
     username: user.username,
     email: user.email,
-    profilePicUrl: user.profilePicUrl
+    profilePicId: user.profilePicId,
   };
 }
 

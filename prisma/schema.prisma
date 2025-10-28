@@ -8,21 +8,23 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String
-  username      String    @unique
-  email         String    @unique
-  password      String
-  profilePicUrl String?
-  bio           String?
-  roleId        String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
+  id           String    @id @default(uuid())
+  name         String
+  username     String    @unique
+  email        String    @unique
+  password     String
+  bio          String?
+  roleId       String?
+  profilePicId String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 
-  posts    Post[]    @relation("UserPosts")
-  comments Comment[]
-  role     Role?     @relation(fields: [roleId], references: [id])
+  posts      Post[]    @relation("UserPosts")
+  comments   Comment[]
+  role       Role?     @relation(fields: [roleId], references: [id])
+  images     Image[]
+  profilePic Image?    @relation("UserProfilePic", fields: [profilePicId], references: [id])
 }
 
 model Role {
@@ -51,20 +53,36 @@ model Post {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  author   User        @relation("UserPosts", fields: [authorId], references: [id])
+  author   User      @relation("UserPosts", fields: [authorId], references: [id])
   comments Comment[]
-  images   PostImage[]
+  images   Image[]
 }
 
-model PostImage {
-  id        String    @id @default(uuid())
-  url       String
-  order     Int?
-  postId    String
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
+model Image {
+  id           String    @id @default(uuid())
+  name         String?
+  originalName String
+  url          String
+  userId       String
+  order        Int?
+  type         ImageType @default(POST)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  post Post @relation(fields: [postId], references: [id])
+  postId    String?
+  commentId String?
+
+  post    Post?    @relation(fields: [postId], references: [id])
+  comment Comment? @relation(fields: [commentId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
+
+  usedByAsProfile User[] @relation("UserProfilePic")
+}
+
+enum ImageType {
+  POST
+  COMMENT
+  PROFILE
 }
 
 model Comment {
@@ -81,4 +99,5 @@ model Comment {
   user    User      @relation(fields: [userId], references: [id])
   parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
   replies Comment[] @relation("CommentReplies")
+  images  Image[]
 }

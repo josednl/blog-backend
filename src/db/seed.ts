@@ -3,12 +3,14 @@ import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Starting database seed...');
 
+  // ========================
+  // 1. PERMISSIONS
+  // ========================
   const permissions = [
     { name: 'CREATE_USER', description: 'Can create new users' },
     { name: 'READ_USER', description: 'Can view user information' },
@@ -19,6 +21,8 @@ async function main() {
     { name: 'READ_POST', description: 'Can read posts' },
     { name: 'UPDATE_POST', description: 'Can edit posts' },
     { name: 'DELETE_POST', description: 'Can delete posts' },
+
+    { name: 'MANAGE_IMAGES', description: 'Can create or modify images' },
 
     { name: 'CREATE_COMMENT', description: 'Can write comments' },
     { name: 'DELETE_COMMENT', description: 'Can delete comments' },
@@ -31,14 +35,20 @@ async function main() {
     permissions.map(async (perm) =>
       prisma.permission.upsert({
         where: { name: perm.name },
-        update: {},
+        update: { description: perm.description },
         create: perm,
       })
     )
   );
 
-  const getPerm = (name: string) => createdPermissions.find((p) => p.name === name)!;
+  const getPerm = (name: string) =>
+    createdPermissions.find((p) => p.name === name)!;
 
+  console.log('Permissions synchronized');
+
+  // ========================
+  // 2. ROLES
+  // ========================
   const roles = [
     {
       name: 'admin',
@@ -53,6 +63,7 @@ async function main() {
         getPerm('READ_POST'),
         getPerm('UPDATE_POST'),
         getPerm('DELETE_POST'),
+        getPerm('MANAGE_IMAGES'),
         getPerm('CREATE_COMMENT'),
         getPerm('DELETE_COMMENT'),
       ],
@@ -62,6 +73,7 @@ async function main() {
       description: 'Can view posts and write comments',
       permissions: [
         getPerm('READ_POST'),
+        getPerm('MANAGE_IMAGES'),
         getPerm('CREATE_COMMENT'),
       ],
     },
@@ -70,7 +82,13 @@ async function main() {
   for (const role of roles) {
     await prisma.role.upsert({
       where: { name: role.name },
-      update: {},
+      update: {
+        description: role.description,
+        permissions: {
+          set: [],
+          connect: role.permissions.map((p) => ({ id: p.id })),
+        },
+      },
       create: {
         name: role.name,
         description: role.description,
@@ -81,8 +99,11 @@ async function main() {
     });
   }
 
-  console.log('Roles and permissions seeded');
+  console.log('Roles synchronized');
 
+  // ========================
+  // 3. ADMIN USER
+  // ========================
   const ADMIN_NAME = process.env.ADMIN_NAME || 'Admin User';
   const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
   const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@example.com';
@@ -92,11 +113,19 @@ async function main() {
   const adminRole = await prisma.role.findUnique({ where: { name: 'admin' } });
   if (!adminRole) throw new Error('Admin role not found — seed roles first.');
 
-  const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, SALT_ROUNDS);
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: ADMIN_EMAIL },
+  });
 
+  const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, SALT_ROUNDS);
   await prisma.user.upsert({
     where: { email: ADMIN_EMAIL },
-    update: {},
+    update: {
+      name: ADMIN_NAME,
+      username: ADMIN_USERNAME,
+      password: hashedPassword,
+      roleId: adminRole.id,
+    },
     create: {
       name: ADMIN_NAME,
       username: ADMIN_USERNAME,
@@ -105,8 +134,8 @@ async function main() {
       roleId: adminRole.id,
     },
   });
+  console.log('Admin user created/updated');
 
-  console.log(`Admin user created`);
   console.log('Database seed completed successfully!');
 }
 

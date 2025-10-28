@@ -8,6 +8,7 @@ import { errorHandler } from './middlewares/error-handler';
 import userRouter from './modules/User/user.routes';
 import authRouter from './modules/Auth/auth.routes';
 import postRouter from './modules/Post/post.routes';
+import imageRouter from './modules/Image/image.routes';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use(passport.initialize());
 app.use('/auth', authRouter);
 app.use('/users', userRouter);
 app.use('/posts', postRouter);
+app.use('/images', imageRouter);
 
 //Error Handling Middleware
 app.use(errorHandler);
