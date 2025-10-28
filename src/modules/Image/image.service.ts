@@ -76,7 +76,7 @@ export class ImageService {
     if (!image) throw new AppError('Image not found', 404);
 
     const isOwner = image.userId === currentUser.id;
-    const isAdmin = currentUser.role?.name === 'admin';
+    const isAdmin = currentUser.roleName === 'admin';
 
     if (!isOwner && !isAdmin) {
       throw new AppError('You are not authorized to edit this image', 403);
@@ -93,7 +93,7 @@ export class ImageService {
     if (!image) throw new AppError('Image not found', 404);
 
     const isOwner = image.userId === currentUser.id;
-    const isAdmin = currentUser.role?.name === 'admin';
+    const isAdmin = currentUser.roleName === 'admin';
 
     if (!isOwner && !isAdmin) {
       throw new AppError('You are not authorized to delete this image', 403);

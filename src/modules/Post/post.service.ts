@@ -80,7 +80,7 @@ export class PostService {
     if (!post) throw new AppError('Post not found', 404);
 
     const isOwner = post.authorId === currentUser.id;
-    const isAdmin = currentUser.role?.name === 'admin';
+    const isAdmin = currentUser.roleName === 'admin';
 
     if (!isOwner && !isAdmin) {
       throw new AppError('You are not authorized to edit this post', 403);
@@ -97,7 +97,7 @@ export class PostService {
     if (!post) throw new AppError('Post not found', 404);
 
     const isOwner = post.authorId === currentUser.id;
-    const isAdmin = currentUser.role?.name === 'admin';
+    const isAdmin = currentUser.roleName === 'admin';
 
     if (!isOwner && !isAdmin) {
       throw new AppError('You are not authorized to delete this post', 403);

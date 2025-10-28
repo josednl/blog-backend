@@ -75,6 +75,7 @@ async function main() {
         getPerm('READ_POST'),
         getPerm('MANAGE_IMAGES'),
         getPerm('CREATE_COMMENT'),
+        getPerm('DELETE_COMMENT'),
       ],
     },
   ];

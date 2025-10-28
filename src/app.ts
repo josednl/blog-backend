@@ -9,6 +9,7 @@ import userRouter from './modules/User/user.routes';
 import authRouter from './modules/Auth/auth.routes';
 import postRouter from './modules/Post/post.routes';
 import imageRouter from './modules/Image/image.routes';
+import commentRouter from './modules/Comment/comment.routes';
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use('/auth', authRouter);
 app.use('/users', userRouter);
 app.use('/posts', postRouter);
 app.use('/images', imageRouter);
+app.use('/comments', commentRouter);
 
 //Error Handling Middleware
 app.use(errorHandler);
