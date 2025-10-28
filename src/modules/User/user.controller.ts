@@ -78,7 +78,7 @@ export const updateUserValidationRules = [
 
 export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const users = await service.getAllUsers();
+    const users = await service.getAllUsers(req.user);
     res.json(users);
   } catch (err: any) {
     next(err);
@@ -113,7 +113,7 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
   }
 
   try {
-    const updatedUser = await service.updateUser(id, updateData);
+    const updatedUser = await service.updateUser(id, updateData, req.user);
     res.json(updatedUser);
   } catch (err: any) {
     next(err);
@@ -127,7 +127,7 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
   }
 
   try {
-    await service.deleteUser(id);
+    await service.deleteUser(id, req.user);
     res.status(204).json({  message: 'User deleted' });
   } catch (err: any) {
     next(err);

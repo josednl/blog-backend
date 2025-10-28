@@ -66,6 +66,8 @@ async function main() {
         getPerm('MANAGE_IMAGES'),
         getPerm('CREATE_COMMENT'),
         getPerm('DELETE_COMMENT'),
+        getPerm('READ_USER'),
+        getPerm('UPDATE_USER'),
       ],
     },
     {
@@ -76,6 +78,8 @@ async function main() {
         getPerm('MANAGE_IMAGES'),
         getPerm('CREATE_COMMENT'),
         getPerm('DELETE_COMMENT'),
+        getPerm('READ_USER'),
+        getPerm('UPDATE_USER'),
       ],
     },
   ];

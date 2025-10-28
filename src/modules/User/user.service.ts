@@ -3,9 +3,13 @@ import { User } from './user.entity';
 import { AppError } from '../../utils/AppError';
 import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcrypt';
+import { PrismaRoleRepository } from '../Role/role.repository.prisma';
 
 export class UserService {
-  constructor(private readonly repo: UserRepository) { }
+  constructor(
+    private readonly repo: UserRepository,
+        private readonly roleRepo: PrismaRoleRepository = new PrismaRoleRepository()
+  ) { }
 
   async create(data: {
     name: string;
@@ -32,8 +36,22 @@ export class UserService {
     await this.repo.create(user);
   }
   
-  async getAllUsers(): Promise<User[]> {
-    return this.repo.findAll();
+  async getAllUsers(currentUser?: any): Promise<User[]> {
+    let roleName = 'user';
+
+    if (currentUser) {
+      const role = currentUser.roleName
+        ? { name: currentUser.roleName }
+        : await this.roleRepo.findById(currentUser.roleId);
+
+      roleName = role?.name ?? 'user';
+    }
+
+    if (roleName === 'admin') {
+      return this.repo.findAll();
+    } else {
+      throw new AppError('You are not authorized', 403); 
+    }
   }
 
   async getUserById(id: string): Promise<User | null> {
@@ -54,9 +72,16 @@ export class UserService {
     return user;
   }
 
-  async updateUser(id: string, updateData: Partial<Omit<User, 'id'>>): Promise<User> {
+  async updateUser(id: string, updateData: Partial<Omit<User, 'id'>>, currentUser: any): Promise<User> {
     const user = await this.repo.findById(id);
     if (!user) throw new AppError('User not found', 404);
+
+    const itsMe = user.id === currentUser.id;
+    const isAdmin = currentUser.roleName === 'admin';
+
+    if (!itsMe && !isAdmin) {
+      throw new AppError('You are not authorized to edit this user', 403);
+    }
 
     Object.assign(user, updateData);
 
@@ -64,9 +89,16 @@ export class UserService {
     return user;
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUser(id: string, currentUser: any): Promise<void> {
     const user = await this.repo.findById(id);
     if (!user) throw new AppError('User not found', 404);
+
+    const itsMe = user.id === currentUser.id;
+    const isAdmin = currentUser.roleName === 'admin';
+
+    if (!itsMe && !isAdmin) {
+      throw new AppError('You are not authorized to delete this user', 403);
+    }
 
     await this.repo.softDelete(id);
   }
