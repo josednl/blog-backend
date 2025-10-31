@@ -1,10 +1,11 @@
 import { prisma } from '../../shared/prisma';
+import { Role } from '../Role/role.entity';
 import { Permission } from './permission.entity';
 import { PermissionRepository } from './permission.repository';
 
 export class PrismaPermissionRepository implements PermissionRepository {
   private mapToEntity(data: any): Permission {
-    const roles = data.roles ? data.roles.map((r: any) => r.name) : [];
+    const roles = data.roles ? data.roles.map((r: any) => new Role(r.id, r.name, r.description)) : [];
     return new Permission(
       data.id,
       data.name,
@@ -13,12 +14,17 @@ export class PrismaPermissionRepository implements PermissionRepository {
     );
   }
 
-  async create(permission: Permission): Promise<void> {
+  async create(permission: Permission, roleIds?: string[]): Promise<void> {
     await prisma.permission.create({
       data: {
         id: permission.id,
         name: permission.name,
         ...(permission.description !== undefined && { description: permission.description }),
+        ...(roleIds && roleIds.length > 0 && {
+          roles: {
+            connect: roleIds.map((rid) => ({ id: rid })),
+          },
+        }),
       }
     });
   }
@@ -47,12 +53,18 @@ export class PrismaPermissionRepository implements PermissionRepository {
     return this.findBy('name', name);
   }
 
-  async update(permission: Permission): Promise<void> {
+  async update(permission: Permission, roleIds?: string[]): Promise<void> {
     await prisma.permission.update({
       where: { id: permission.id },
       data: {
         ...(permission.name !== undefined && { name: permission.name }),
         ...(permission.description !== undefined && { description: permission.description }),
+        ...(roleIds && {
+          roles: {
+            set: [],
+            connect: roleIds.map((rid) => ({ id: rid })),
+          },
+        }),
       }
     })
   }

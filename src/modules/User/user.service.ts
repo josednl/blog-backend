@@ -8,7 +8,7 @@ import { PrismaRoleRepository } from '../Role/role.repository.prisma';
 export class UserService {
   constructor(
     private readonly repo: UserRepository,
-        private readonly roleRepo: PrismaRoleRepository = new PrismaRoleRepository()
+    private readonly roleRepo: PrismaRoleRepository = new PrismaRoleRepository()
   ) { }
 
   async create(data: {
@@ -35,7 +35,7 @@ export class UserService {
 
     await this.repo.create(user);
   }
-  
+
   async getAllUsers(currentUser?: any): Promise<User[]> {
     let roleName = 'user';
 
@@ -50,7 +50,7 @@ export class UserService {
     if (roleName === 'admin') {
       return this.repo.findAll();
     } else {
-      throw new AppError('You are not authorized', 403); 
+      throw new AppError('You are not authorized', 403);
     }
   }
 
@@ -83,6 +83,13 @@ export class UserService {
       throw new AppError('You are not authorized to edit this user', 403);
     }
 
+    if (updateData.password) {
+      const hashedPassword = await bcrypt.hash(updateData.password, 10);
+      updateData.password = hashedPassword;
+    } else {
+      delete updateData.password;
+    }
+    
     Object.assign(user, updateData);
 
     await this.repo.update(user);

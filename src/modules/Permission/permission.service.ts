@@ -8,6 +8,8 @@ export class PermissionService {
 
   async createPermission(data: {
     name: string;
+    description?: string;
+    roles?: string[];
   }): Promise<void> {
     const nameExists = await this.repo.findByName(data.name);
     if (nameExists) throw new AppError('Name already in use', 400);
@@ -15,9 +17,10 @@ export class PermissionService {
     const permission = new Permission(
       uuid(),
       data.name,
+      data.description
     );
 
-    await this.repo.create(permission);
+    await this.repo.create(permission, data.roles);
   }
 
   async getPermissionById(id: string) {
@@ -32,13 +35,13 @@ export class PermissionService {
     return this.repo.findAll();
   }
 
-  async updatePermission(id: string, updateData: Partial<Omit<Permission, 'id'>>): Promise<Permission> {
+  async updatePermission(id: string, updateData: Partial<Omit<Permission, 'id'>> & { roles: string[] }): Promise<Permission> {
     const permission = await this.repo.findById(id);
     if (!permission) throw new AppError('Permission not found', 404);
 
     Object.assign(permission, updateData);
 
-    await this.repo.update(permission);
+    await this.repo.update(permission, updateData.roles);
     return permission;
   }
 

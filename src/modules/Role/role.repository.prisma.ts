@@ -14,12 +14,17 @@ export class PrismaRoleRepository implements RoleRepository {
     );
   }
 
-  async create(role: Role): Promise<void> {
+  async create(role: Role, permissionIds?: string[]): Promise<void> {
     await prisma.role.create({
       data: {
         id: role.id,
         name: role.name,
         ...(role.description !== undefined && { description: role.description }),
+        ...(permissionIds && permissionIds.length > 0 && {
+          permissions: {
+            connect: permissionIds.map((pid) => ({ id: pid })),
+          },
+        }),
       }
     });
   }
@@ -48,12 +53,18 @@ export class PrismaRoleRepository implements RoleRepository {
     return this.findBy('name', name);
   }
 
-  async update(role: Role): Promise<void> {
+  async update(role: Role, permissionIds?: string[]): Promise<void> {
     await prisma.role.update({
       where: { id: role.id },
       data: {
         ...(role.name !== undefined && { name: role.name }),
         ...(role.description !== undefined && { description: role.description }),
+        ...(permissionIds && {
+          permissions: {
+            set: [],
+            connect: permissionIds.map((pid) => ({ id: pid })),
+          },
+        }),
       }
     })
   }
