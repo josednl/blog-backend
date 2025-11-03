@@ -4,11 +4,16 @@ import { Image } from './image.entity';
 import { AppError } from '../../utils/AppError';
 import { v4 as uuid } from 'uuid';
 import { ImageType } from '@prisma/client';
+import { PrismaUserRepository } from '../User/user.repository.prisma';
+import { StorageService } from './storage.service';
+
+const storageService = new StorageService();
 
 export class ImageService {
   constructor(
     private readonly repo: ImageRepository,
-    private readonly roleRepo: PrismaRoleRepository = new PrismaRoleRepository()
+    private readonly roleRepo: PrismaRoleRepository = new PrismaRoleRepository(),
+    private readonly userRepo: PrismaUserRepository = new PrismaUserRepository(),
   ) { }
 
   async createImage(data: {
@@ -20,7 +25,7 @@ export class ImageService {
     order?: number;
     postId?: string;
     commentId?: string;
-  }): Promise<void> {
+  }): Promise<Image> {
     const image = new Image({
       id: uuid(),
       originalName: data.originalName,
@@ -34,6 +39,7 @@ export class ImageService {
     });
 
     await this.repo.create(image);
+    return image;
   }
 
   async getAllImages(currentUser?: any): Promise<Image[]> {
@@ -71,6 +77,38 @@ export class ImageService {
     return image;
   }
 
+  async uploadProfileImage({
+    userId,
+    file,
+  }: {
+    userId: string;
+    file: Express.Multer.File;
+  }) {
+    if (!file) throw new AppError('No file uploaded', 400);
+
+    const image = new Image({
+      id: uuid(),
+      originalName: file.originalname,
+      url: `/uploads/${file.filename}`,
+      type: ImageType.PROFILE,
+      userId,
+    });
+
+    await this.repo.create(image);
+
+    if (!this.userRepo) {
+      throw new AppError('UserRepository not provided to ImageService', 500);
+    }
+
+    await this.userRepo.updatePartial(userId, { profilePicId: image.id });
+
+    return {
+      message: 'Profile image uploaded successfully',
+      imageUrl: image.url,
+      imageId: image.id,
+    };
+  }
+
   async updateImage(id: string, updateData: Partial<Omit<Image, 'id'>>, currentUser: any): Promise<Image> {
     const image = await this.repo.findById(id);
     if (!image) throw new AppError('Image not found', 404);
@@ -97,6 +135,10 @@ export class ImageService {
 
     if (!isOwner && !isAdmin) {
       throw new AppError('You are not authorized to delete this image', 403);
+    }
+
+    if (image.url) {
+      await storageService.deleteFile(image.url);
     }
 
     await this.repo.delete(id);

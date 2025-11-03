@@ -63,7 +63,20 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.findBy('id', id);
+    // return this.findBy('id', id);
+    const result = await prisma.user.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        profilePic: true,
+      },
+    });
+
+    if (!result) return null;
+
+    const user = this.mapToEntity(result);
+    (user as any).profilePicUrl = result.profilePic?.url || null;
+
+    return user;
   }
 
   async findByUsername(username: string): Promise<User | null> {

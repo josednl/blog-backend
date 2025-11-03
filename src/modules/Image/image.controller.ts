@@ -3,9 +3,11 @@ import { ImageService } from './image.service';
 import { PrismaImageRepository } from './image.repository.prisma';
 import { body } from 'express-validator';
 import { ImageType } from '@prisma/client';
+import { StorageService } from './storage.service';
 
 const repo = new PrismaImageRepository();
 const service = new ImageService(repo);
+const storageService = new StorageService();
 
 export const createImageValidationRules = [
   body('originalName')
@@ -118,6 +120,29 @@ export const updateImage = async (req: Request, res: Response, next: NextFunctio
     next(err);
   }
 }
+
+export const uploadProfileImage = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = req.user;
+    const file = req.file;
+
+    if (!user) return res.status(400).json({ error: 'Missing user ID' });
+    if (!file) return res.status(400).json({ error: 'No image file provided' });
+
+    const storageResult = await storageService.upload(file);
+
+    const image = await service.createImage({
+      userId: user.id,
+      type: ImageType.PROFILE,
+      originalName: storageResult.originalName,
+      url: storageResult.url
+    });
+
+    res.status(201).json({ message: 'Profile image uploaded', imageId: image.id, imageUrl: image.url });
+  } catch (err) {
+    next(err);
+  }
+};
 
 export const deleteImage = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
