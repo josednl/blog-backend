@@ -3,78 +3,62 @@ import { ImageService } from './image.service';
 import { PrismaImageRepository } from './image.repository.prisma';
 import { body } from 'express-validator';
 import { ImageType } from '@prisma/client';
-import { StorageService } from './storage.service';
 
 const repo = new PrismaImageRepository();
 const service = new ImageService(repo);
-const storageService = new StorageService();
 
 export const createImageValidationRules = [
-  body('originalName')
-    .exists({ checkFalsy: true }).withMessage('originalName is required')
-    .isString().withMessage('originalName must be a string'),
-
-  body('url')
-    .exists({ checkFalsy: true }).withMessage('url is required')
-    .isString().withMessage('url must be a string'),
-
-  body('userId')
-    .exists({ checkFalsy: true }).withMessage('userId is required')
-    .isUUID().withMessage('userId must be a UUID'),
-
   body('type')
     .optional()
-    .isIn(Object.values(ImageType)).withMessage(`type must be: ${Object.values(ImageType).join(', ')}`),
+    .isIn(Object.values(ImageType))
+    .withMessage(`type must be one of: ${Object.values(ImageType).join(', ')}`),
 
   body('name')
     .optional()
-    .isString().withMessage('name must be a string'),
+    .isString()
+    .withMessage('name must be a string'),
 
   body('order')
     .optional()
-    .isInt({ min: 0 }).withMessage('order must be a positive integer'),
+    .isInt({ min: 0 })
+    .withMessage('order must be a positive integer'),
 
   body('postId')
     .optional()
-    .isUUID().withMessage('postId must be a UUID'),
+    .isUUID()
+    .withMessage('postId must be a valid UUID'),
 
   body('commentId')
     .optional()
-    .isUUID().withMessage('commentId must be a UUID'),
+    .isUUID()
+    .withMessage('commentId must be a valid UUID'),
 ];
 
 export const updateImageValidationRules = [
-  body('originalName')
-    .optional()
-    .isString().withMessage('originalName must be a string'),
-
-  body('url')
-    .optional()
-    .isString().withMessage('url must be a string'),
-
-  body('userId')
-    .optional()
-    .isUUID().withMessage('userId must be a UUID'),
-
-  body('type')
-    .optional()
-    .isIn(Object.values(ImageType)).withMessage(`type must be: ${Object.values(ImageType).join(', ')}`),
-
   body('name')
     .optional()
-    .isString().withMessage('name must be a string'),
+    .isString()
+    .withMessage('name must be a string'),
 
   body('order')
     .optional()
-    .isInt({ min: 0 }).withMessage('order must be a positive integer'),
+    .isInt({ min: 0 })
+    .withMessage('order must be a positive integer'),
+
+  body('type')
+    .optional()
+    .isIn(Object.values(ImageType))
+    .withMessage(`type must be one of: ${Object.values(ImageType).join(', ')}`),
 
   body('postId')
     .optional()
-    .isUUID().withMessage('postId must be a UUID'),
+    .isUUID()
+    .withMessage('postId must be a valid UUID'),
 
   body('commentId')
     .optional()
-    .isUUID().withMessage('commentId must be a UUID'),
+    .isUUID()
+    .withMessage('commentId must be a valid UUID'),
 ];
 
 export const getAllImages = async (req: Request, res: Response, next: NextFunction) => {
@@ -99,12 +83,32 @@ export const getImageById = async (req: Request, res: Response, next: NextFuncti
 
 export const createImage = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await service.createImage(req.body);
-    res.status(201).json({ message: 'Image created' });
-  } catch (err: any) {
+    const user = req.user;
+    if (!user) {
+      return res.status(400).json({ error: 'Missing user ID' });
+    }
+    const file = req.file;
+
+    const image = await service.createImage({
+      userId: user.id,
+      type: req.body.type,
+      postId: req.body.postId,
+      commentId: req.body.commentId,
+      order: req.body.order,
+      name: req.body.name,
+      file,
+    });
+
+    res.status(201).json({
+      message: 'Image uploaded successfully',
+      imageId: image.id,
+      imageUrl: image.url,
+    });
+  } catch (err) {
     next(err);
   }
-}
+};
+
 
 export const updateImage = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
@@ -120,29 +124,6 @@ export const updateImage = async (req: Request, res: Response, next: NextFunctio
     next(err);
   }
 }
-
-export const uploadProfileImage = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const user = req.user;
-    const file = req.file;
-
-    if (!user) return res.status(400).json({ error: 'Missing user ID' });
-    if (!file) return res.status(400).json({ error: 'No image file provided' });
-
-    const storageResult = await storageService.upload(file);
-
-    const image = await service.createImage({
-      userId: user.id,
-      type: ImageType.PROFILE,
-      originalName: storageResult.originalName,
-      url: storageResult.url
-    });
-
-    res.status(201).json({ message: 'Profile image uploaded', imageId: image.id, imageUrl: image.url });
-  } catch (err) {
-    next(err);
-  }
-};
 
 export const deleteImage = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;

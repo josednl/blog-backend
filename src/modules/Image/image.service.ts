@@ -14,23 +14,35 @@ export class ImageService {
     private readonly repo: ImageRepository,
     private readonly roleRepo: PrismaRoleRepository = new PrismaRoleRepository(),
     private readonly userRepo: PrismaUserRepository = new PrismaUserRepository(),
-  ) { }
+  ) {}
 
   async createImage(data: {
-    originalName: string;
-    url: string;
-    type: ImageType;
     userId: string;
-    name?: string;
-    order?: number;
-    postId?: string;
-    commentId?: string;
+    type?: ImageType | undefined;
+    originalName?: string | undefined;
+    url?: string | undefined;
+    name?: string | undefined;
+    order?: number | undefined;
+    postId?: string | undefined;
+    commentId?: string | undefined;
+    file?: Express.Multer.File | undefined;
   }): Promise<Image> {
+    let uploadResult: { url: string; originalName: string } | undefined;
+
+    if (data.file) {
+      uploadResult = await storageService.upload(data.file);
+    } else if (!data.url || !data.originalName) {
+      throw new AppError(
+        'Either file or (url + originalName) must be provided',
+        400
+      );
+    }
+
     const image = new Image({
       id: uuid(),
-      originalName: data.originalName,
-      url: data.url,
-      type: data.type,
+      originalName: uploadResult?.originalName ?? data.originalName!,
+      url: uploadResult?.url ?? data.url!,
+      type: data.type ?? ImageType.POST,
       userId: data.userId,
       name: data.name,
       order: data.order,
@@ -39,18 +51,23 @@ export class ImageService {
     });
 
     await this.repo.create(image);
+
+    if (image.type === ImageType.PROFILE) {
+      await this.userRepo.updatePartial(image.userId, {
+        profilePicId: image.id,
+      });
+    }
+
     return image;
   }
 
   async getAllImages(currentUser?: any): Promise<Image[]> {
-
     let roleName = 'user';
 
     if (currentUser) {
       const role = currentUser.roleName
         ? { name: currentUser.roleName }
         : await this.roleRepo.findById(currentUser.roleId);
-
       roleName = role?.name ?? 'user';
     } else {
       return this.repo.findPublic();
@@ -67,7 +84,12 @@ export class ImageService {
     const image = await this.repo.findById(id);
     if (!image) throw new AppError('Image not found', 404);
 
-    const role = currentUser?.roleName ?? (currentUser?.roleId ? (await this.roleRepo.findById(currentUser.roleId))?.name : 'user') ?? 'user';
+    const role =
+      currentUser?.roleName ??
+      (currentUser?.roleId
+        ? (await this.roleRepo.findById(currentUser.roleId))?.name
+        : 'user') ??
+      'user';
     const isOwner = image.userId === currentUser?.id;
     const isPublic = !!image.postId || !!image.commentId;
 
@@ -77,39 +99,11 @@ export class ImageService {
     return image;
   }
 
-  async uploadProfileImage({
-    userId,
-    file,
-  }: {
-    userId: string;
-    file: Express.Multer.File;
-  }) {
-    if (!file) throw new AppError('No file uploaded', 400);
-
-    const image = new Image({
-      id: uuid(),
-      originalName: file.originalname,
-      url: `/uploads/${file.filename}`,
-      type: ImageType.PROFILE,
-      userId,
-    });
-
-    await this.repo.create(image);
-
-    if (!this.userRepo) {
-      throw new AppError('UserRepository not provided to ImageService', 500);
-    }
-
-    await this.userRepo.updatePartial(userId, { profilePicId: image.id });
-
-    return {
-      message: 'Profile image uploaded successfully',
-      imageUrl: image.url,
-      imageId: image.id,
-    };
-  }
-
-  async updateImage(id: string, updateData: Partial<Omit<Image, 'id'>>, currentUser: any): Promise<Image> {
+  async updateImage(
+    id: string,
+    updateData: Partial<Omit<Image, 'id'>>,
+    currentUser: any
+  ): Promise<Image> {
     const image = await this.repo.findById(id);
     if (!image) throw new AppError('Image not found', 404);
 
@@ -121,7 +115,6 @@ export class ImageService {
     }
 
     Object.assign(image, updateData);
-
     await this.repo.update(image);
     return image;
   }

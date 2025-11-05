@@ -18,8 +18,8 @@ export class PrismaPostRepository implements PostRepository {
     );
   }
 
-  async create(post: Post): Promise<void> {
-    await prisma.post.create({
+  async create(post: Post): Promise<any> {
+    const created = await prisma.post.create({
       data: {
         id: post.id,
         title: post.title,
@@ -28,6 +28,8 @@ export class PrismaPostRepository implements PostRepository {
         authorId: post.authorId,
       }
     });
+
+    return created;
   }
 
   async findAll(): Promise<Post[]> {

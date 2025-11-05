@@ -1,7 +1,7 @@
 import { Post } from './post.entity';
 
 export interface PostRepository {
-  create(post: Post): Promise<void>;
+  create(post: Post): Promise<any>;
   findAll(): Promise<Post[]>;
   findAllPublic(): Promise<Post[]>;
   findAllOwn(id: string): Promise<Post[]>;

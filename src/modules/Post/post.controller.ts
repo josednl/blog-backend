@@ -78,8 +78,8 @@ export const getPostById = async (req: Request, res: Response, next: NextFunctio
 
 export const createPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await service.create(req.body);
-    res.status(201).json({ message: 'Post created' });
+    const post = await service.create(req.body);
+    res.status(201).json({ message: 'Post created', data: post });
   } catch (err: any) {
     next(err);
   }

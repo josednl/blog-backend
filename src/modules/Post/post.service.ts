@@ -15,7 +15,7 @@ export class PostService {
     content: PostContent;
     published: boolean;
     authorId: string;
-  }): Promise<void> {
+  }): Promise<any> {
     const post = new Post(
       uuid(),
       data.title,
@@ -24,7 +24,8 @@ export class PostService {
       data.authorId
     );
 
-    await this.repo.create(post);
+    const created = await this.repo.create(post);
+    return created;
   }
 
   async getAllPosts(currentUser?: any): Promise<Post[]> {
