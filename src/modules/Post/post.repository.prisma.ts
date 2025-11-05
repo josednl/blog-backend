@@ -39,7 +39,13 @@ export class PrismaPostRepository implements PostRepository {
 
   async findAllOwn(id: string): Promise<Post[]> {
     const results = await prisma.post.findMany({
-      where: { authorId: id }
+      where: {
+        authorId: id,
+        deletedAt: null,
+      },
+      include: {
+        images: true,
+      },
     });
     return results.map(this.mapToEntity);
   }
@@ -75,7 +81,7 @@ export class PrismaPostRepository implements PostRepository {
 
   async findPublicByAuthorId(author: string): Promise<Post[] | null> {
     const results = await prisma.post.findMany({
-      where: { 
+      where: {
         authorId: author,
         published: true,
       }
@@ -91,10 +97,10 @@ export class PrismaPostRepository implements PostRepository {
     await prisma.post.update({
       where: { id },
       data: {
-        ...(data.title && { title: data.title }),
-        ...(data.content && { content: data.content }),
-        ...(data.published && { published: data.published }),
-        ...(data.authorId && { authorId: data.authorId }),
+        ...(data.title !== undefined && { title: data.title }),
+        ...(data.content !== undefined && { content: data.content }),
+        ...(data.published !== undefined && { published: data.published }),
+        ...(data.authorId !== undefined && { authorId: data.authorId }),
       }
     });
   }

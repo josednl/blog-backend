@@ -76,6 +76,17 @@ export const getPostById = async (req: Request, res: Response, next: NextFunctio
   res.json(post);
 }
 
+export const getPostsByUser = async (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({ error: 'Missing user ID' });
+  }
+
+  const posts = await service.getPostsByAuthor(id, req.user);
+  if (!posts) return res.status(404).json({ error: 'Posts not found' });
+  res.json(posts);
+}
+
 export const createPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const post = await service.create(req.body);

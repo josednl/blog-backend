@@ -70,7 +70,7 @@ export class PostService {
     const role = currentUser.roleName ?? (await this.roleRepo.findById(currentUser.roleId))?.name ?? 'user';
 
     if (isOwner || role === 'admin' || role === 'editor') {
-      return this.repo.findByAuthorId(authorId);
+      return this.repo.findAllOwn(authorId);
     }
 
     return this.repo.findPublicByAuthorId(authorId);
