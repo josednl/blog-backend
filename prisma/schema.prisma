@@ -46,7 +46,7 @@ model Permission {
 model Post {
   id        String    @id @default(uuid())
   title     String
-  content   String    @db.Text
+  content   Json?
   published Boolean   @default(false)
   authorId  String
   createdAt DateTime  @default(now())

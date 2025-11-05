@@ -1,6 +1,6 @@
 import { PostRepository } from './post.repository';
 import { PrismaRoleRepository } from '../Role/role.repository.prisma';
-import { Post } from './post.entity';
+import { Post, PostContent } from './post.entity';
 import { AppError } from '../../utils/AppError';
 import { v4 as uuid } from 'uuid';
 
@@ -12,7 +12,7 @@ export class PostService {
 
   async create(data: {
     title: string;
-    content: string;
+    content: PostContent;
     published: boolean;
     authorId: string;
   }): Promise<void> {

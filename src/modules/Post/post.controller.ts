@@ -14,8 +14,12 @@ export const createPostValidationRules = [
     .isLength({ min: 2, max: 120 }).withMessage('Name must be between 2 and 120 characters'),
 
   body('content')
-    .trim()
-    .notEmpty().withMessage('Content is required'),
+    .custom((value) => {
+      if (!Array.isArray(value)) {
+        throw new Error('Content must be an array');
+      }
+      return true;
+    }),
 
   body('published')
     .isBoolean().withMessage('Published must be a boolean')
@@ -35,7 +39,12 @@ export const updatePostValidationRules = [
 
   body('content')
     .optional()
-    .trim(),
+    .custom((value) => {
+      if (!Array.isArray(value)) {
+        throw new Error('Content must be an array');
+      }
+      return true;
+    }),
 
   body('published')
     .optional()

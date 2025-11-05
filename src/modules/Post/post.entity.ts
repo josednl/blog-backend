@@ -1,10 +1,16 @@
 import { AppError } from '../../utils/AppError';
 
+export type PostContentBlock =
+  | { type: 'paragraph'; content: string }
+  | { type: 'image'; id: string };
+
+export type PostContent = PostContentBlock[];
+
 export class Post {
   constructor(
     public readonly id: string,
     public title: string,
-    public content: string,
+    public content: PostContent,
     public published: boolean = false,
     public authorId:string,
     public createdAt?: Date,
