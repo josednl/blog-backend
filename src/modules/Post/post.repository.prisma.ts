@@ -106,9 +106,19 @@ export class PrismaPostRepository implements PostRepository {
   }
 
   async softDelete(id: string): Promise<void> {
-    await prisma.post.update({
-      where: { id },
-      data: { deletedAt: new Date() }
+    // await prisma.post.update({
+    //   where: { id },
+    //   data: { deletedAt: new Date() }
+    // });
+    await prisma.$transaction(async (tx) => {
+      await tx.image.deleteMany({
+        where: { postId: id },
+      });
+
+      await tx.post.update({
+        where: { id },
+        data: { deletedAt: new Date()}
+      });
     });
   }
 
