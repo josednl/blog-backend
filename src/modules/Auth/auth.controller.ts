@@ -86,7 +86,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     });
   } catch (error) {
     console.error('Login error:', error);
-    next();
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error),
+    });
+    // next();
   }
 };
 
