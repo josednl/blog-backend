@@ -15,7 +15,8 @@ export class Post {
     public authorId:string,
     public createdAt?: Date,
     public updatedAt?: Date,
-    public deletedAt?: Date
+    public deletedAt?: Date,
+    public images: any[] = []
   ) {}
 
   publish() {

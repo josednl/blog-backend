@@ -26,14 +26,12 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use(cokkieParser());
 app.use(passport.initialize());
 
-const allowedOrigins = (
-  process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL_PROD
-    : process.env.FRONTEND_URL
-)
-  ?.split(',')
-  .map(origin => origin.trim())
-  .filter(Boolean) || [];
+const allowedOrigins = [
+  process.env.FRONTEND_URL_DEV_1,
+  process.env.FRONTEND_URL_DEV_2,
+  process.env.FRONTEND_URL_PROD_1,
+  process.env.FRONTEND_URL_PROD_2,
+].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {

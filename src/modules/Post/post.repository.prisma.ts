@@ -14,7 +14,8 @@ export class PrismaPostRepository implements PostRepository {
       data.authorId,
       data.createdAt,
       data.updatedAt,
-      data.deletedAt
+      data.deletedAt,
+      data.images || [] 
     );
   }
 
@@ -53,6 +54,15 @@ export class PrismaPostRepository implements PostRepository {
   async findAllPublic(): Promise<Post[]> {
     const results = await prisma.post.findMany({
       where: { published: true, deletedAt: null },
+      include: {
+        images: {
+          select: {
+            id: true,
+            url: true,
+            originalName: true,
+          }
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
     return results.map(this.mapToEntity);
@@ -62,6 +72,9 @@ export class PrismaPostRepository implements PostRepository {
     const result = await prisma.post.findFirst({
       where: {
         [field]: value,
+      },
+      include: {
+        images: true,
       }
     });
 
@@ -117,7 +130,7 @@ export class PrismaPostRepository implements PostRepository {
 
       await tx.post.update({
         where: { id },
-        data: { deletedAt: new Date()}
+        data: { deletedAt: new Date() }
       });
     });
   }
