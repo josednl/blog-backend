@@ -20,6 +20,6 @@ if (!process.env.DATABASE_URL) {
   }
 }
 
-console.log('DB Connection URL:', process.env.DATABASE_URL);
+// console.log('DB Connection URL:', process.env.DATABASE_URL);
 
 export const prisma = new PrismaClient();

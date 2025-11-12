@@ -48,6 +48,7 @@ export const autoRefreshAuth = async (req: Request, res: Response, next: NextFun
             username: user.username,
             email: user.email,
             profilePicId: user.profilePicId,
+            profilePicUrl: (user as any).profilePicUrl || null,
             roleId: user.roleId,
             roleName,
           };
@@ -126,6 +127,7 @@ export const autoRefreshAuth = async (req: Request, res: Response, next: NextFun
       username: user.username,
       email: user.email,
       profilePicId: user.profilePicId,
+      profilePicUrl: (user as any).profilePicUrl || null,
       roleId: user.roleId,
       roleName,
     };

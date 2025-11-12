@@ -70,7 +70,7 @@ export class PrismaUserRepository implements UserRepository {
         profilePic: true,
       },
     });
-
+    
     if (!result) return null;
 
     const user = this.mapToEntity(result);
