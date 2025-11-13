@@ -78,7 +78,7 @@ export const autoRefreshAuth = async (req: Request, res: Response, next: NextFun
     }
 
     const sessionDuration = Date.now() - decodedRefresh.sessionStart!;
-    const maxSessionDuration = 7 * 24 * 60 * 60 * 1000; // 7 días
+    const maxSessionDuration = 7 * 24 * 60 * 60 * 1000; 
     if (sessionDuration > maxSessionDuration) {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
@@ -101,14 +101,14 @@ export const autoRefreshAuth = async (req: Request, res: Response, next: NextFun
     res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
