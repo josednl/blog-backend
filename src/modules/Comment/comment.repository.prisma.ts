@@ -9,12 +9,24 @@ export class PrismaCommentRepository implements CommentRepository {
       content: data.content,
       postId: data.postId,
       userId: data.userId,
-      parentId: data.parentId,
+      parentId: data.parentId ?? undefined,
       createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-      deletedAt: data.deletedAt,
+      updatedAt: data.updatedAt ?? undefined,
+      deletedAt: data.deletedAt ?? undefined,
+      user: data.user
+        ? {
+          id: data.user.id,
+          username: data.user.username,
+          profilePic: data.user.profilePic
+            ? { id: data.user.profilePic.id, url: data.user.profilePic.url }
+            : undefined,
+        }
+        : undefined,
+      replies: data.replies?.map((r: any) => this.mapToEntity(r)) ?? [],
+      images: data.images ?? [],
     });
   }
+
 
   async create(comment: Comment): Promise<void> {
     await prisma.comment.create({
@@ -55,7 +67,33 @@ export class PrismaCommentRepository implements CommentRepository {
   }
 
   async findByPost(postId: string): Promise<Comment[]> {
-    return this.findByField('postId', postId);
+    const results = await prisma.comment.findMany({
+      where: { postId, parentId: null },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            profilePic: { select: { id: true, url: true } }
+          }
+        },
+        replies: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                profilePic: { select: { id: true, url: true } }
+              }
+            },
+            images: true
+          }
+        },
+        images: true
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+    return results.map((r) => this.mapToEntity(r));
   }
 
   async findByParent(parentId: string): Promise<Comment[]> {
