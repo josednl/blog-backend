@@ -22,7 +22,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await prisma.comment.deleteMany();
-  await prisma.postImage.deleteMany();
+  await prisma.image.deleteMany();
   await prisma.post.deleteMany();
   await prisma.user.deleteMany();
   await prisma.role.deleteMany();

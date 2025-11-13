@@ -14,7 +14,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await prisma.$transaction([
     prisma.comment.deleteMany(),
-    prisma.postImage.deleteMany(),
+    prisma.image.deleteMany(),
     prisma.post.deleteMany(),
     prisma.user.deleteMany(),
     prisma.role.deleteMany()
