@@ -47,6 +47,10 @@ export class PostService {
 
     return this.repo.findAllPublic();
   }
+  
+  async getPublicPostsPaginated(page: number, limit: number): Promise<Post[]> {
+    return this.repo.findAllPublicPaginated(page, limit);
+  }
 
   async getPostById(id: string, currentUser?: any): Promise<Post | null> {
     const post = await this.repo.findById(id);

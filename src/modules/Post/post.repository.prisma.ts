@@ -15,7 +15,7 @@ export class PrismaPostRepository implements PostRepository {
       data.createdAt,
       data.updatedAt,
       data.deletedAt,
-      data.images || [] 
+      data.images || []
     );
   }
 
@@ -66,6 +66,28 @@ export class PrismaPostRepository implements PostRepository {
       orderBy: { createdAt: 'desc' },
     });
     return results.map(this.mapToEntity);
+  }
+
+  async findAllPublicPaginated(page: number, limit: number): Promise<Post[]> {
+    const skip = (page - 1) * limit;
+
+    const results = await prisma.post.findMany({
+      where: { published: true, deletedAt: null },
+      include: {
+        images: {
+          select: {
+            id: true,
+            url: true,
+            originalName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    });
+
+    return results.map((r) => this.mapToEntity(r));
   }
 
   private async findBy(field: 'id' | 'authorId', value: string): Promise<Post | null> {

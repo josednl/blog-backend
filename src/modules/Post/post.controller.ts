@@ -65,6 +65,18 @@ export const getAllPosts = async (req: Request, res: Response, next: NextFunctio
   }
 }
 
+export const getAllPostsPaginated = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    
+    const posts = await service.getPublicPostsPaginated(page, limit);
+    res.json(posts);
+  } catch (err: any) {
+    next(err);
+  }
+}
+
 export const getPostById = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
   if (!id) {
